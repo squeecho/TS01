@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#f4f5f7">
+<title>이견공간 실측 요청서</title>
+
+<!-- flatpickr -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/ko.js"></script>
+
+<!-- 다음 우편번호 -->
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f4f5f7;
+    color: #1a1a2e;
+    min-height: 100vh;
+    padding: 24px 16px 80px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container { max-width: 680px; margin: 0 auto; }
+
+  header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a2e;
+    letter-spacing: -.01em;
+  }
+  header p {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+    letter-spacing: .03em;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+
+  .card-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 14px;
+  }
+
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #4a4a4a;
+    margin-bottom: 6px;
+  }
+
+  .input {
+    width: 100%;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 11px 13px;
+    font-size: 15px;
+    font-family: inherit;
+    color: #1a1a2e;
+    background: #fff;
+    outline: none;
+    transition: border-color .15s, background .15s, opacity .15s;
+    -webkit-appearance: none;
+  }
+  .input:focus { border-color: #4f8ef7; }
+  .input::placeholder { color: #b8bcc4; font-weight: 400; }
+  .input:disabled {
+    background: #f4f5f7;
+    color: #9ca3af;
+    cursor: not-allowed;
+  }
+
+  /* 주소 + 검색 버튼 */
+  .addr-row { display: flex; gap: 8px; }
+  .addr-row .input { flex: 1; }
+  .search-btn {
+    flex: 0 0 auto;
+    padding: 0 16px;
+    border: 1.5px solid #1a1a2e;
+    background: #1a1a2e;
+    color: #fff;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity .15s;
+  }
+  .search-btn:hover, .search-btn:active { opacity: .85; }
+
+  /* 휴대폰 3칸 분리 */
+  .phone-row { display: flex; gap: 6px; align-items: center; }
+  .phone-row .input {
+    text-align: center;
+    padding: 11px 6px;
+    flex: 1;
+  }
+  .phone-row .dash {
+    color: #9ca3af;
+    font-weight: 500;
+    user-select: none;
+  }
+
+  /* 잔금일 예정 토글 */
+  .toggle-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .toggle-row label {
+    font-size: 13px;
+    color: #4a4a4a;
+    user-select: none;
+    cursor: pointer;
+  }
+  .toggle-row input[type="checkbox"] {
+    width: 18px; height: 18px;
+    accent-color: #4f8ef7;
+    cursor: pointer;
+  }
+
+  /* 특이사항 */
+  .note-item {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .note-item .index {
+    flex: 0 0 22px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .note-item .input { flex: 1; }
+  .note-item .del-btn {
+    flex: 0 0 40px;
+    height: 40px;
+    border: none;
+    background: #f4f5f7;
+    color: #888;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background .15s;
+  }
+  .note-item .del-btn:hover, .note-item .del-btn:active { background: #ffe5e5; color: #e54848; }
+
+  .add-btn {
+    width: 100%;
+    border: 1.5px dashed #d1d5db;
+    background: transparent;
+    color: #6b7280;
+    border-radius: 8px;
+    padding: 11px;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all .15s;
+    margin-top: 4px;
+  }
+  .add-btn:hover, .add-btn:active { border-color: #4f8ef7; color: #4f8ef7; background: #f0f4ff; }
+
+  /* 칩 (자주 사용 문구) */
+  .chip-section {
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f0f1f4;
+  }
+  .chip-label {
+    font-size: 11.5px;
+    color: #9ca3af;
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    border: 1.5px solid #e5e7eb;
+    background: #fff;
+    color: #4a4a4a;
+    border-radius: 20px;
+    padding: 7px 13px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all .15s;
+    user-select: none;
+    line-height: 1.3;
+  }
+  .chip:hover, .chip:active {
+    border-color: #4f8ef7;
+    color: #4f8ef7;
+  }
+  .chip.active {
+    background: #1a1a2e;
+    border-color: #1a1a2e;
+    color: #fff;
+  }
+  .chip.active:hover, .chip.active:active {
+    background: #000;
+    border-color: #000;
+  }
+
+  /* 미리보기 */
+  .preview-box {
+    background: #f8f9fb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 16px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #1a1a2e;
+    white-space: pre-wrap;
+    word-break: keep-all;
+    font-family: 'SF Mono', 'Menlo', 'Consolas', 'Noto Sans KR', monospace;
+    min-height: 220px;
+  }
+
+  /* 액션 버튼 */
+  .action-bar {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .btn {
+    flex: 1;
+    border: none;
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-primary { background: #1a1a2e; color: #fff; }
+  .btn-primary:hover, .btn-primary:active { background: #000; transform: translateY(-1px); }
+  .btn-primary.copied { background: #22c55e; }
+  .btn-default { background: #fff; color: #6b7280; border: 1.5px solid #e5e7eb; }
+  .btn-default:hover, .btn-default:active { border-color: #ef4444; color: #ef4444; }
+
+  .hint {
+    font-size: 11.5px;
+    color: #9ca3af;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  /* 토스트 */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #1a1a2e;
+    color: #fff;
+    padding: 12px 22px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    transition: transform .3s cubic-bezier(.2,.9,.3,1.4);
+    z-index: 100;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* flatpickr 한국어 폰트 통일 */
+  .flatpickr-calendar { font-family: 'Noto Sans KR', sans-serif; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>실측 요청서</h1>
+    <p>The Supporter</p>
+  </header>
+
+  <!-- 1. 기본 정보 -->
+  <div class="card">
+    <div class="card-title">기본 정보</div>
+
+    <div class="field">
+      <label class="field-label">1. 주소</label>
+      <div class="addr-row">
+        <input class="input" id="address" placeholder="주소를 검색하거나 직접 입력하세요">
+        <button type="button" class="search-btn" onclick="openPostcode()">검색</button>
+      </div>
+      <input class="input" id="addressDetail" placeholder="상세 주소 (층, 호수 등)" style="margin-top:8px">
+    </div>
+
+    <div class="field">
+      <label class="field-label">2. 현재 업장 상호</label>
+      <input class="input" id="brand" placeholder="상호명">
+    </div>
+
+    <div class="field">
+      <label class="field-label">3. 면적 (평)</label>
+      <input class="input" id="area" inputmode="decimal" placeholder="평수 입력">
+      <p class="hint">숫자만 입력하면 "약 ○○평 내외"로 자동 표기됩니다. 다른 표기를 원하면 텍스트를 그대로 입력하세요.</p>
+    </div>
+  </div>
+
+  <!-- 2. 연락처 -->
+  <div class="card">
+    <div class="card-title">연락처</div>
+
+    <div class="field">
+      <label class="field-label">4. 점주</label>
+      <input class="input" id="ownerName" placeholder="이름" style="margin-bottom:6px">
+      <div class="phone-row" data-phone-group="owner">
+        <input class="input" inputmode="numeric" maxlength="3" data-phone-idx="1" value="010">
+        <span class="dash">-</span>
+        <input class="input" inputmode="numeric" maxlength="4" data-phone-idx="2" placeholder="0000">
+        <span class="dash">-</span>
+        <input class="input" inputmode="numeric" maxlength="4" data-phone-idx="3" placeholder="0000">
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">5. 담당 부동산 <span style="color:#9ca3af;font-weight:400">(선택)</span></label>
+      <input class="input" id="realtorName" placeholder="회사명 / 담당자" style="margin-bottom:6px">
+      <div class="phone-row" data-phone-group="realtor">
+        <input class="input" inputmode="numeric" maxlength="3" data-phone-idx="1" value="010">
+        <span class="dash">-</span>
+        <input class="input" inputmode="numeric" maxlength="4" data-phone-idx="2" placeholder="0000">
+        <span class="dash">-</span>
+        <input class="input" inputmode="numeric" maxlength="4" data-phone-idx="3" placeholder="0000">
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">6. 건물 소장 <span style="color:#9ca3af;font-weight:400">(선택)</span></label>
+      <input class="input" id="managerName" placeholder="이름 / 직책" style="margin-bottom:6px">
+      <div class="phone-row" data-phone-group="manager">
+        <input class="input" inputmode="numeric" maxlength="3" data-phone-idx="1" value="010">
+        <span class="dash">-</span>
+        <input class="input" inputmode="numeric" maxlength="4" data-phone-idx="2" placeholder="0000">
+        <span class="dash">-</span>
+        <input class="input" inputmode="numeric" maxlength="4" data-phone-idx="3" placeholder="0000">
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 일정 -->
+  <div class="card">
+    <div class="card-title">일정</div>
+
+    <div class="field">
+      <label class="field-label">7. 계약일</label>
+      <input class="input" id="contractDate" placeholder="날짜 선택" readonly>
+    </div>
+
+    <div class="field">
+      <label class="field-label">8. 임대차 잔금일</label>
+      <input class="input" id="balanceDate" placeholder="날짜 선택" readonly>
+      <div class="toggle-row">
+        <input type="checkbox" id="balanceTBD">
+        <label for="balanceTBD">미정 (출력 시 "추후 예정" 표기)</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 특이사항 -->
+  <div class="card">
+    <div class="card-title">특이사항</div>
+    <div class="chip-section">
+      <p class="chip-label">자주 사용하는 문구 (탭하여 추가/제거)</p>
+      <div class="chips" id="chipsList"></div>
+    </div>
+    <div id="notesList"></div>
+    <button class="add-btn" onclick="addNote()">+ 직접 입력</button>
+  </div>
+
+  <!-- 5. 미리보기 -->
+  <div class="card">
+    <div class="card-title">미리보기</div>
+    <div class="preview-box" id="preview"></div>
+    <div class="action-bar">
+      <button class="btn btn-default" onclick="resetForm()">초기화</button>
+      <button class="btn btn-primary" id="copyBtn" onclick="copyText()">전체 복사</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">복사되었습니다</div>
+
+<script>
+  const STORAGE_KEY = 'iggg-survey-form-v2';
+
+  const $ = id => document.getElementById(id);
+
+  // ───── 다음 우편번호 ─────
+  function openPostcode() {
+    new daum.Postcode({
+      oncomplete: function(data) {
+        $('address').value = data.address;
+        updatePreview();
+        saveState();
+        setTimeout(() => $('addressDetail').focus(), 50);
+      }
+    }).open();
+  }
+
+  // ───── 면적 포맷 ─────
+  function formatArea(v) {
+    if (!v) return '';
+    const trimmed = v.trim();
+    if (/^\d+(\.\d+)?$/.test(trimmed)) {
+      return `약 ${trimmed}평 내외`;
+    }
+    return trimmed;
+  }
+
+  // ───── 휴대폰 그룹 처리 ─────
+  function getPhoneInputs(group) {
+    return document.querySelectorAll(`[data-phone-group="${group}"] [data-phone-idx]`);
+  }
+
+  function getPhoneValue(group) {
+    const inputs = getPhoneInputs(group);
+    const parts = [...inputs].map(i => i.value.trim());
+    // 모두 비어있으면 빈 문자열
+    if (parts.every(p => !p)) return '';
+    // 010만 있고 나머지 비었으면 빈 문자열 (의미 없는 입력)
+    if (parts[0] === '010' && !parts[1] && !parts[2]) return '';
+    return parts.filter(Boolean).join('-');
+  }
+
+  function setPhoneValue(group, parts) {
+    const inputs = getPhoneInputs(group);
+    inputs[0].value = parts[0] || '010';
+    inputs[1].value = parts[1] || '';
+    inputs[2].value = parts[2] || '';
+  }
+
+  function bindPhoneGroup(group) {
+    const inputs = getPhoneInputs(group);
+    inputs.forEach((input, i) => {
+      input.addEventListener('input', e => {
+        // 숫자만 허용
+        e.target.value = e.target.value.replace(/\D/g, '');
+        // 첫 칸은 maxlength 3, 나머지는 4
+        const max = i === 0 ? 3 : 4;
+        if (e.target.value.length >= max && i < inputs.length - 1) {
+          inputs[i + 1].focus();
+          inputs[i + 1].select();
+        }
+        updatePreview();
+        saveState();
+      });
+      // Backspace로 빈 칸에서 이전 칸 이동
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !e.target.value && i > 0) {
+          inputs[i - 1].focus();
+        }
+      });
+      // 포커스 시 전체 선택 (모바일 편의)
+      input.addEventListener('focus', e => {
+        setTimeout(() => e.target.select(), 0);
+      });
+    });
+  }
+
+  // ───── 특이사항 ─────
+  const PRESET_CHIPS = [
+    '실측 전 부동산 통화 필요',
+    '주방 집기 양도양수 항목 확인',
+    '주방 설비 재사용 가능 여부 확인',
+    '습식주방 공사 진행 필요'
+  ];
+
+  let notes = [''];
+
+  function renderChips() {
+    const wrap = $('chipsList');
+    wrap.innerHTML = '';
+    PRESET_CHIPS.forEach(text => {
+      const isActive = notes.some(n => n.trim() === text);
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'chip' + (isActive ? ' active' : '');
+      chip.textContent = text;
+      chip.onclick = () => toggleChip(text);
+      wrap.appendChild(chip);
+    });
+  }
+
+  function toggleChip(text) {
+    const idx = notes.findIndex(n => n.trim() === text);
+    if (idx >= 0) {
+      // 이미 있으면 제거
+      notes.splice(idx, 1);
+      if (notes.length === 0) notes.push('');
+    } else {
+      // 없으면 추가 - 빈 note가 있으면 그 자리에 채우고, 없으면 새로 추가
+      const emptyIdx = notes.findIndex(n => !n.trim());
+      if (emptyIdx >= 0) {
+        notes[emptyIdx] = text;
+      } else {
+        notes.push(text);
+      }
+    }
+    renderNotes();
+    renderChips();
+    updatePreview();
+    saveState();
+  }
+
+  function escapeAttr(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function renderNotes() {
+    const list = $('notesList');
+    list.innerHTML = '';
+    notes.forEach((text, i) => {
+      const row = document.createElement('div');
+      row.className = 'note-item';
+      row.innerHTML = `
+        <div class="index">${i + 1}.</div>
+        <input class="input" value="${escapeAttr(text)}" placeholder="특이사항 입력" data-idx="${i}">
+        <button class="del-btn" onclick="removeNote(${i})" title="삭제">×</button>
+      `;
+      list.appendChild(row);
+    });
+    list.querySelectorAll('input').forEach(inp => {
+      inp.addEventListener('input', e => {
+        notes[parseInt(e.target.dataset.idx, 10)] = e.target.value;
+        updatePreview();
+        renderChips();
+        saveState();
+      });
+    });
+  }
+
+  function addNote() {
+    notes.push('');
+    renderNotes();
+    updatePreview();
+    saveState();
+    setTimeout(() => {
+      const inputs = $('notesList').querySelectorAll('input');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    }, 50);
+  }
+
+  function removeNote(i) {
+    notes.splice(i, 1);
+    if (notes.length === 0) notes.push('');
+    renderNotes();
+    renderChips();
+    updatePreview();
+    saveState();
+  }
+
+  // ───── 날짜 포맷 ─────
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-');
+    return `${parseInt(m, 10)}월 ${parseInt(d, 10)}일`;
+  }
+
+  // ───── flatpickr 초기화 ─────
+  const contractFP = flatpickr('#contractDate', {
+    locale: 'ko',
+    dateFormat: 'Y-m-d',
+    disableMobile: true,
+    onChange: () => { updatePreview(); saveState(); }
+  });
+
+  const balanceFP = flatpickr('#balanceDate', {
+    locale: 'ko',
+    dateFormat: 'Y-m-d',
+    disableMobile: true,
+    onChange: () => { updatePreview(); saveState(); }
+  });
+
+  // 잔금일 토글
+  function applyBalanceTBD() {
+    const tbd = $('balanceTBD').checked;
+    const input = $('balanceDate');
+    if (tbd) {
+      balanceFP.clear();
+      input.disabled = true;
+      input.placeholder = '추후 예정';
+    } else {
+      input.disabled = false;
+      input.placeholder = '날짜 선택';
+    }
+    updatePreview();
+    saveState();
+  }
+
+  // ───── 미리보기 ─────
+  function buildText() {
+    const address = [$('address').value.trim(), $('addressDetail').value.trim()]
+      .filter(Boolean).join(' ');
+    const brand = $('brand').value.trim();
+    const area = formatArea($('area').value);
+
+    const ownerName = $('ownerName').value.trim();
+    const ownerPhone = getPhoneValue('owner');
+    const owner = [ownerName, ownerPhone].filter(Boolean).join(', ');
+
+    const realtorName = $('realtorName').value.trim();
+    const realtorPhone = getPhoneValue('realtor');
+    const realtor = [realtorName, realtorPhone].filter(Boolean).join(' ');
+
+    const managerName = $('managerName').value.trim();
+    const managerPhone = getPhoneValue('manager');
+    const manager = [managerName, managerPhone].filter(Boolean).join(' ');
+
+    const contractDate = formatDate($('contractDate').value);
+    const balanceTBD = $('balanceTBD').checked;
+    const balanceDateRaw = $('balanceDate').value;
+    const balanceDate = formatDate(balanceDateRaw);
+    const balanceText = balanceTBD ? '추후 예정' : balanceDate;
+
+    let out = '[실측 요청서]\n\n';
+    out += `1. 주소: ${address}\n`;
+    out += `2. 상호: ${brand}\n`;
+    out += `3. 면적: ${area}\n`;
+    out += `4. 점주: ${owner}\n`;
+    out += `5. 담당부동산: ${realtor}\n`;
+    out += `6. 건물소장: ${manager}\n`;
+    out += `7. 계약일: ${contractDate}\n`;
+    out += `8. 임대차 잔금일: ${balanceText}\n`;
+
+    const validNotes = notes.map(n => n.trim()).filter(Boolean);
+    if (validNotes.length > 0) {
+      out += `\n*특이사항\n`;
+      validNotes.forEach((n, i) => {
+        out += `${i + 1}. ${n}\n`;
+      });
+    }
+
+    return out.trimEnd();
+  }
+
+  function updatePreview() {
+    $('preview').textContent = buildText();
+  }
+
+  // ───── 복사 ─────
+  async function copyText() {
+    const text = buildText();
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('복사되었습니다');
+      const btn = $('copyBtn');
+      btn.classList.add('copied');
+      btn.textContent = '✓ 복사됨';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.textContent = '전체 복사';
+      }, 1500);
+    } catch (e) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); showToast('복사되었습니다'); }
+      catch (_) { showToast('복사 실패 — 직접 선택해 주세요'); }
+      document.body.removeChild(ta);
+    }
+  }
+
+  function showToast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  // ───── 초기화 ─────
+  function resetForm() {
+    if (!confirm('모든 입력을 지우고 새로 작성하시겠습니까?')) return;
+    ['address', 'addressDetail', 'brand', 'area', 'ownerName', 'realtorName', 'managerName']
+      .forEach(id => { $(id).value = ''; });
+    setPhoneValue('owner', []);
+    setPhoneValue('realtor', []);
+    setPhoneValue('manager', []);
+    contractFP.clear();
+    balanceFP.clear();
+    $('balanceTBD').checked = false;
+    applyBalanceTBD();
+    notes = [''];
+    renderNotes();
+    renderChips();
+    localStorage.removeItem(STORAGE_KEY);
+    updatePreview();
+    showToast('초기화 완료');
+  }
+
+  // ───── 저장/복구 ─────
+  function saveState() {
+    const collectPhone = g => [...getPhoneInputs(g)].map(i => i.value);
+    const state = {
+      address: $('address').value,
+      addressDetail: $('addressDetail').value,
+      brand: $('brand').value,
+      area: $('area').value,
+      ownerName: $('ownerName').value,
+      ownerPhone: collectPhone('owner'),
+      realtorName: $('realtorName').value,
+      realtorPhone: collectPhone('realtor'),
+      managerName: $('managerName').value,
+      managerPhone: collectPhone('manager'),
+      contractDate: $('contractDate').value,
+      balanceDate: $('balanceDate').value,
+      balanceTBD: $('balanceTBD').checked,
+      notes: notes
+    };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch (e) { /* 무시 */ }
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      $('address').value = s.address || '';
+      $('addressDetail').value = s.addressDetail || '';
+      $('brand').value = s.brand || '';
+      $('area').value = s.area || '';
+      $('ownerName').value = s.ownerName || '';
+      setPhoneValue('owner', s.ownerPhone || []);
+      $('realtorName').value = s.realtorName || '';
+      setPhoneValue('realtor', s.realtorPhone || []);
+      $('managerName').value = s.managerName || '';
+      setPhoneValue('manager', s.managerPhone || []);
+      if (s.contractDate) contractFP.setDate(s.contractDate);
+      if (s.balanceDate) balanceFP.setDate(s.balanceDate);
+      $('balanceTBD').checked = s.balanceTBD === true;
+      notes = Array.isArray(s.notes) && s.notes.length ? s.notes : [''];
+    } catch (e) { /* 무시 */ }
+  }
+
+  // ───── 이벤트 바인딩 ─────
+  ['address', 'addressDetail', 'brand', 'area', 'ownerName', 'realtorName', 'managerName']
+    .forEach(id => {
+      $(id).addEventListener('input', () => { updatePreview(); saveState(); });
+    });
+
+  bindPhoneGroup('owner');
+  bindPhoneGroup('realtor');
+  bindPhoneGroup('manager');
+
+  $('balanceTBD').addEventListener('change', applyBalanceTBD);
+
+  // ───── 시작 ─────
+  loadState();
+  applyBalanceTBD();
+  renderNotes();
+  renderChips();
+  updatePreview();
+</script>
+
+</body>
+</html>
