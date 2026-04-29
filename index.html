@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#f4f5f7">
-<title>이견공간 실측 요청서</title>
+<title>더서포터 실측 요청서</title>
 
 <!-- flatpickr -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
@@ -625,6 +625,9 @@
   }
 
   // ───── 미리보기 ─────
+  // 빈 줄 보존용 zero-width space (카톡 등에서 빈 줄이 자동 삭제되는 것 방지)
+  const BLANK_LINE = '\u200B';
+
   function buildText() {
     const address = [$('address').value.trim(), $('addressDetail').value.trim()]
       .filter(Boolean).join(' ');
@@ -649,7 +652,7 @@
     const balanceDate = formatDate(balanceDateRaw);
     const balanceText = balanceTBD ? '추후 예정' : balanceDate;
 
-    let out = '[실측 요청서]\n\n';
+    let out = '[실측 요청서]\n' + BLANK_LINE + '\n';
     out += `1. 주소: ${address}\n`;
     out += `2. 상호: ${brand}\n`;
     out += `3. 면적: ${area}\n`;
@@ -661,7 +664,7 @@
 
     const validNotes = notes.map(n => n.trim()).filter(Boolean);
     if (validNotes.length > 0) {
-      out += `\n*특이사항\n`;
+      out += BLANK_LINE + '\n*특이사항\n';
       validNotes.forEach((n, i) => {
         out += `${i + 1}. ${n}\n`;
       });
